@@ -22,6 +22,7 @@ export interface Workflow {
   lastTriggered?: string;
   previousExecutionCount?: number;
   notificationRuleId?: string;
+  executionTimestamps?: string[];
 }
 
 const workflows: Workflow[] = [];
@@ -38,8 +39,14 @@ export const workflowStore = {
       if (workflow.previousExecutionCount === undefined) {
         workflow.previousExecutionCount = workflow.executionCount;
       }
+      if (typeof workflow.executionCount !== 'number' || isNaN(workflow.executionCount)) {
+        workflow.executionCount = 0;
+      }
       workflow.executionCount++;
+      workflow.successRate = 100;
       workflow.lastTriggered = new Date().toISOString();
+      if (!workflow.executionTimestamps) workflow.executionTimestamps = [];
+      workflow.executionTimestamps.push(new Date().toISOString());
       console.log(`Incremented execution count for workflow "${workflow.name}" to ${workflow.executionCount}.`);
     }
   },
@@ -72,6 +79,72 @@ export const workflowStore = {
   },
 };
 
+export interface Template {
+  id: string;
+  userAddress: string;
+  name: string;
+  description: string;
+  category: 'defi' | 'nft' | 'gaming' | 'dao' | 'custom';
+  triggerType: 'eth_transfer' | 'nft_purchase' | 'contract_event' | 'token_transfer' | 'price_alert';
+  actionType: 'email' | 'webhook' | 'discord' | 'slack' | 'telegram';
+  isPublic: boolean;
+  isPremium: boolean;
+  tags: string[];
+  message: {
+    subject: string;
+    body: string;
+  };
+  config: {
+    triggerConfig: Record<string, any>;
+    actionConfig: Record<string, any>;
+  };
+  createdAt: string;
+  updatedAt: string;
+  usageCount: number;
+}
+
+const templates: Template[] = [];
+
+export const templateStore = {
+  getAll: () => templates,
+  add: (template: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newTemplate: Template = {
+      ...template,
+      id: randomBytes(16).toString('hex'),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      usageCount: typeof template.usageCount === 'number' ? template.usageCount : 0,
+    };
+    templates.push(newTemplate);
+    return newTemplate;
+  },
+  findById: (id: string) => templates.find(t => t.id === id),
+  update: (id: string, updates: Partial<Omit<Template, 'id' | 'createdAt' | 'userAddress'>>) => {
+    const template = templateStore.findById(id);
+    if (template) {
+      console.log('Before update:', JSON.stringify(template));
+      if (updates.usageCount !== undefined) {
+        template.usageCount = Number(updates.usageCount);
+        if (isNaN(template.usageCount)) template.usageCount = 0;
+        delete updates.usageCount;
+      }
+      Object.assign(template, updates);
+      template.updatedAt = new Date().toISOString();
+      console.log('After update:', JSON.stringify(template));
+      return template;
+    }
+    return undefined;
+  },
+  delete: (id: string) => {
+    const index = templates.findIndex(t => t.id === id);
+    if (index !== -1) {
+      const deleted = templates.splice(index, 1);
+      return deleted[0];
+    }
+    return undefined;
+  },
+};
+
 export interface NotificationRule {
   id: string;
   name: string;
@@ -94,6 +167,9 @@ interface UserSettings {
     discord?: string;
     email?: string;
     webhookUrl?: string;
+  };
+  profile?: {
+    name?: string;
   };
 }
 

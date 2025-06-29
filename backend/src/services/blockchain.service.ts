@@ -231,7 +231,17 @@ const handleMatchedWorkflow = async (workflow: any, tx: ethers.TransactionRespon
       const rule = user.notificationRules.find(r => r.id === workflow.notificationRuleId);
       if (rule && rule.trigger === 'workflowSucceeds') {
         console.log(`Executing custom "success" notification rule: "${rule.name}"`);
-        const context = { workflow, tx: { ...tx.toJSON(), value: ethers.formatEther(tx.value) } };
+        const context = {
+          user_name: user?.settings?.profile?.name || user?.address || 'User',
+          trigger_data: workflow.triggerType === 'eth_transfer' ? 'ETH Transfer' : (workflow.triggerType === 'nft_purchase' ? 'NFT Purchase' : (workflow.triggerType === 'contract_event' ? 'Contract Event' : '')), 
+          timestamp: new Date().toLocaleString(),
+          workflow_name: workflow.name,
+          amount: tx.value ? ethers.formatEther(tx.value) : '',
+          address: tx.to || '',
+          tx_hash: tx.hash || '',
+          workflow,
+          tx: { ...tx.toJSON(), value: ethers.formatEther(tx.value) }
+        };
         await sendCustomNotification(rule, workflow, context, user);
         return; // Stop here to prevent default notification
       } else if (!rule) {
@@ -255,27 +265,44 @@ const handleMatchedWorkflow = async (workflow: any, tx: ethers.TransactionRespon
         return;
       }
 
-      const discordMessage = {
-        embeds: [
-          {
-            title: `🔔 Localhost Transfer Detected: ${workflow.name}`,
-            color: 16776960, // Yellow for localhost
-            fields: [
-              { name: 'To', value: `\`${tx.to}\``, inline: false },
-              { name: 'From', value: `\`${tx.from}\``, inline: false },
-              { name: 'Amount', value: `**${ethers.formatEther(tx.value)} ETH**`, inline: true },
-              { name: 'Transaction Hash', value: `\`${tx.hash}\``, inline: false },
-            ],
-            footer: { text: 'Powered by Web3Flow (Localnet)' },
-            timestamp: new Date().toISOString(),
-          }
-        ]
-      };
       const webhookUrl = settings.integrations?.discord || workflow.actionParams?.discordWebhook;
-      if (webhookUrl) {
-        await sendDiscordNotification(webhookUrl, discordMessage);
-      } else {
+      if (!webhookUrl) {
         throw new Error('No Discord webhook URL found for workflow or user integrations.');
+      }
+
+      // If workflow.message.body exists, use it as the notification content
+      if (workflow.message && workflow.message.body) {
+        const context = {
+          user_name: user?.settings?.profile?.name || user?.address || 'User',
+          trigger_data: workflow.triggerType === 'eth_transfer' ? 'ETH Transfer' : (workflow.triggerType === 'nft_purchase' ? 'NFT Purchase' : (workflow.triggerType === 'contract_event' ? 'Contract Event' : '')),
+          timestamp: new Date().toLocaleString(),
+          workflow_name: workflow.name,
+          amount: tx.value ? ethers.formatEther(tx.value) : '',
+          address: tx.to || '',
+          tx_hash: tx.hash || '',
+          workflow,
+          tx: { ...tx.toJSON(), value: ethers.formatEther(tx.value) }
+        };
+        const parsedMessage = parseMessage(workflow.message.body, context);
+        await sendDiscordNotification(webhookUrl, { content: parsedMessage });
+      } else {
+        const discordMessage = {
+          embeds: [
+            {
+              title: `🔔 Localhost Transfer Detected: ${workflow.name}`,
+              color: 16776960, // Yellow for localhost
+              fields: [
+                { name: 'To', value: `\`${tx.to}\``, inline: false },
+                { name: 'From', value: `\`${tx.from}\``, inline: false },
+                { name: 'Amount', value: `**${ethers.formatEther(tx.value)} ETH**`, inline: true },
+                { name: 'Transaction Hash', value: `\`${tx.hash}\``, inline: false },
+              ],
+              footer: { text: 'Powered by Web3Flow (Localnet)' },
+              timestamp: new Date().toISOString(),
+            }
+          ]
+        };
+        await sendDiscordNotification(webhookUrl, discordMessage);
       }
     }
   } catch (error) {

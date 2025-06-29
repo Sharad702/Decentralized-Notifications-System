@@ -5,11 +5,12 @@ import { X, ArrowRight, Coins, Palette, Activity, Mail, Webhook, MessageSquare }
 interface CreateWorkflowModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: any, isTemplateUsed: boolean) => void;
   initialData?: any;
+  templates: any[];
 }
 
-const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClose, onSubmit, initialData }) => {
+const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClose, onSubmit, initialData, templates }) => {
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -24,47 +25,19 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
     isActive: true
   });
 
-  // Sample templates (hardcoded for UI demo)
-  const sampleTemplates = [
-    {
-      id: '1',
-      name: 'DeFi Yield Alert',
-      description: 'Get notified when yield farming rewards are ready to claim',
-      triggerType: 'eth_transfer',
-      actionType: 'email',
-      actionParams: { email: '' },
-    },
-    {
-      id: '2',
-      name: 'NFT Floor Price Monitor',
-      description: 'Track NFT collection floor prices and get alerts on significant changes',
-      triggerType: 'nft_purchase',
-      actionType: 'discord',
-      actionParams: { discordWebhook: '' },
-    },
-    {
-      id: '3',
-      name: 'Gaming Token Rewards',
-      description: 'Monitor gaming token rewards and claim notifications',
-      triggerType: 'eth_transfer',
-      actionType: 'webhook',
-      actionParams: { webhookUrl: '' },
-    },
-  ];
-
-  const [selectedTemplateId, setSelectedTemplateId] = useState('custom');
-  const selectedTemplate = sampleTemplates.find(t => t.id === selectedTemplateId);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('default');
+  const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
 
   useEffect(() => {
     if (initialData) {
       // Try to match the template by name (or id if available)
-      const matchedTemplate = sampleTemplates.find(
+      const matchedTemplate = templates.find(
         t => t.name === initialData.name
       );
       if (matchedTemplate) {
         setSelectedTemplateId(matchedTemplate.id);
       } else {
-        setSelectedTemplateId('custom');
+        setSelectedTemplateId('default');
       }
       setForm({
         ...initialData,
@@ -75,7 +48,7 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
         }
       });
     } else {
-      setSelectedTemplateId('custom');
+      setSelectedTemplateId('default');
       setForm({
         name: '',
         description: '',
@@ -91,6 +64,28 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
       });
     }
   }, [initialData, isOpen]);
+
+  // Pre-fill form when a template is selected, but NOT when editing
+  useEffect(() => {
+    if (!initialData && selectedTemplateId !== 'default') {
+      const t = templates.find(t => t.id === selectedTemplateId);
+      if (t) {
+        setForm({
+          name: t.name,
+          description: t.description,
+          triggerType: t.triggerType,
+          actionType: t.actionType,
+          sourceAddress: '', // let user fill
+          actionParams: {
+            email: '',
+            webhookUrl: '',
+            discordWebhook: ''
+          },
+          isActive: true
+        });
+      }
+    }
+  }, [selectedTemplateId, templates, initialData]);
 
   const triggerOptions = [
     {
@@ -134,13 +129,12 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
     }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // If a template is selected, use its name/description
     let workflowName = form.name;
     let workflowDescription = form.description;
-    if (selectedTemplateId !== 'custom' && selectedTemplate) {
+    if (selectedTemplateId !== 'default' && selectedTemplate) {
       workflowName = selectedTemplate.name;
       workflowDescription = selectedTemplate.description;
     }
@@ -149,8 +143,8 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
       id: Date.now().toString(),
       name: workflowName,
       description: workflowDescription,
-      triggerType: selectedTemplateId !== 'custom' && selectedTemplate ? selectedTemplate.triggerType : form.triggerType,
-      actionType: selectedTemplateId !== 'custom' && selectedTemplate ? selectedTemplate.actionType : form.actionType,
+      triggerType: selectedTemplateId !== 'default' && selectedTemplate ? selectedTemplate.triggerType : form.triggerType,
+      actionType: selectedTemplateId !== 'default' && selectedTemplate ? selectedTemplate.actionType : form.actionType,
       sourceAddress: form.sourceAddress,
       actionParams: form.actionParams,
       isActive: form.isActive,
@@ -159,10 +153,17 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
       createdAt: new Date()
     };
 
-    onSubmit(workflow);
+    if (selectedTemplateId !== 'default' && selectedTemplate) {
+      // Pass user input along with template, ensuring form fields take precedence
+      onSubmit({
+        ...selectedTemplate,
+        ...form
+      }, true); // true = template used
+    } else {
+      onSubmit(workflow, false); // false = default
+    }
     onClose();
 
-    // Reset form
     setForm({
       name: '',
       description: '',
@@ -200,7 +201,7 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  Create New Workflow
+                  {initialData ? 'Edit Workflow' : 'Create New Workflow'}
                 </h2>
                 <button
                   onClick={onClose}
@@ -215,9 +216,11 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   value={selectedTemplateId}
                   onChange={e => setSelectedTemplateId(e.target.value)}
+                  disabled={templates.length === 0}
+                  style={templates.length === 0 ? { backgroundColor: '#f3f4f6', color: '#9ca3af' } : {}}
                 >
-                  <option value="custom">Custom...</option>
-                  {sampleTemplates.map(t => (
+                  <option value="default">Default</option>
+                  {templates.map(t => (
                     <option key={t.id} value={t.id}>{t.name}</option>
                   ))}
                 </select>
@@ -225,8 +228,8 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* If custom, show full form. If template, show only relevant field. */}
-              {selectedTemplateId === 'custom' ? (
+              {/* If default, show full form. If template, show only relevant field. */}
+              {selectedTemplateId === 'default' ? (
                 <>
                   {/* Workflow Name (editable) */}
                   <div>

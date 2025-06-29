@@ -215,6 +215,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
               <h3 className="text-lg font-semibold text-slate-900 mb-4">User Preferences</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Name</label>
+                  <input
+                    type="text"
+                    value={settings.profile?.name || ''}
+                    onChange={e => setSettings({
+                      ...settings,
+                      profile: { ...settings.profile, name: e.target.value }
+                    })}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
+                    placeholder="Your Name"
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Timezone</label>
                   <select
                     value={settings.profile?.timezone || 'UTC'}

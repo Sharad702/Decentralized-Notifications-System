@@ -67,7 +67,7 @@ interface TemplatesPageProps {
 }
 
 const TemplatesPage: React.FC<TemplatesPageProps> = ({ onCreateWorkflow, templates, setTemplates, onCreateTemplate, onEditTemplate, onDeleteTemplate }) => {
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -146,7 +146,7 @@ const TemplatesPage: React.FC<TemplatesPageProps> = ({ onCreateWorkflow, templat
     ));
   };
 
-  const handleUseTemplate = (template: Template) => {
+  const handleUseTemplate = async (template: Template) => {
     const workflow = {
       id: Date.now().toString(),
       name: template.name,
@@ -160,13 +160,15 @@ const TemplatesPage: React.FC<TemplatesPageProps> = ({ onCreateWorkflow, templat
       successRate: 100,
       createdAt: new Date()
     };
-    
     onCreateWorkflow(workflow);
-    
-    // Update usage count
-    setTemplates(templates.map(t => 
-      t.id === template.id ? { ...t, usageCount: t.usageCount + 1 } : t
-    ));
+    // Atomic increment usageCount in backend
+    const res = await fetch(`/api/templates/${template.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usageCount: 'increment' })
+    });
+    const updated = await res.json();
+    setTemplates(prev => prev.map(t => t.id === template.id ? updated : t));
   };
 
   const handleModalSubmit = (template: any) => {
@@ -176,7 +178,7 @@ const TemplatesPage: React.FC<TemplatesPageProps> = ({ onCreateWorkflow, templat
     } else {
       onCreateTemplate(template);
     }
-    setShowCreateModal(false);
+    setShowCreateTemplateModal(false);
   };
 
   return (
@@ -207,7 +209,7 @@ const TemplatesPage: React.FC<TemplatesPageProps> = ({ onCreateWorkflow, templat
             <motion.button
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => setShowCreateTemplateModal(true)}
               className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 flex items-center gap-3 shadow-lg hover:shadow-xl"
             >
               <Plus className="w-5 h-5" />
@@ -220,7 +222,7 @@ const TemplatesPage: React.FC<TemplatesPageProps> = ({ onCreateWorkflow, templat
             {[
               { label: 'Total Templates', value: stats.total, icon: FileText, color: 'blue' },
               { label: 'Favorites', value: stats.favorites, icon: Star, color: 'yellow' },
-              { label: 'Total Usage', value: templates.reduce((sum, t) => sum + t.usageCount, 0), icon: Eye, color: 'green' }
+              { label: 'Total Usage', value: templates.reduce((sum, t) => sum + (Number(t.usageCount) || 0), 0), icon: Eye, color: 'green' }
             ].map((stat, index) => {
               const Icon = stat.icon;
               return (
@@ -369,8 +371,7 @@ const TemplatesPage: React.FC<TemplatesPageProps> = ({ onCreateWorkflow, templat
                   template={template}
                   viewMode={viewMode}
                   onToggleFavorite={handleToggleFavorite}
-                  onUseTemplate={handleUseTemplate}
-                  onEdit={() => { setEditingTemplate(template); setShowCreateModal(true); }}
+                  onEdit={() => { setEditingTemplate(template); setShowCreateTemplateModal(true); }}
                   onDelete={() => onDeleteTemplate(template.id)}
                 />
               </motion.div>
@@ -395,7 +396,7 @@ const TemplatesPage: React.FC<TemplatesPageProps> = ({ onCreateWorkflow, templat
               </p>
               {(!searchTerm && filterCategory === 'all') && (
                 <button
-                  onClick={() => setShowCreateModal(true)}
+                  onClick={() => setShowCreateTemplateModal(true)}
                   className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300"
                 >
                   Create Your First Template
@@ -407,8 +408,8 @@ const TemplatesPage: React.FC<TemplatesPageProps> = ({ onCreateWorkflow, templat
 
         {/* Create Template Modal */}
         <CreateTemplateModal
-          isOpen={showCreateModal}
-          onClose={() => { setShowCreateModal(false); setEditingTemplate(null); }}
+          isOpen={showCreateTemplateModal}
+          onClose={() => { setShowCreateTemplateModal(false); setEditingTemplate(null); }}
           onSubmit={handleModalSubmit}
           initialData={editingTemplate}
         />

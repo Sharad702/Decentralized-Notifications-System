@@ -30,6 +30,9 @@ interface WorkflowsPageProps {
   onToggleWorkflow: (id: string) => void;
   onEditWorkflow: (id: string) => void;
   onDeleteWorkflow: (id: string) => void;
+  templates: any[];
+  showCreateWorkflowModal: boolean;
+  setShowCreateWorkflowModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const WorkflowsPage: React.FC<WorkflowsPageProps> = ({
@@ -38,8 +41,10 @@ const WorkflowsPage: React.FC<WorkflowsPageProps> = ({
   onToggleWorkflow,
   onEditWorkflow,
   onDeleteWorkflow,
+  templates,
+  showCreateWorkflowModal,
+  setShowCreateWorkflowModal
 }) => {
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'name' | 'created' | 'executions'>('created');
@@ -106,7 +111,7 @@ const WorkflowsPage: React.FC<WorkflowsPageProps> = ({
             <motion.button
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => setShowCreateWorkflowModal(true)}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 flex items-center gap-3 shadow-lg hover:shadow-xl"
             >
               <Plus className="w-5 h-5" />
@@ -312,7 +317,7 @@ const WorkflowsPage: React.FC<WorkflowsPageProps> = ({
               </p>
               {(!searchTerm && filterStatus === 'all') && (
                 <button
-                  onClick={() => setShowCreateModal(true)}
+                  onClick={() => setShowCreateWorkflowModal(true)}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300"
                 >
                   Create Your First Workflow
@@ -324,9 +329,10 @@ const WorkflowsPage: React.FC<WorkflowsPageProps> = ({
 
         {/* Create Workflow Modal */}
         <CreateWorkflowModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
+          isOpen={showCreateWorkflowModal}
+          onClose={() => setShowCreateWorkflowModal(false)}
           onSubmit={onCreateWorkflow}
+          templates={templates}
         />
       </div>
     </div>

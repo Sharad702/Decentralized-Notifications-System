@@ -236,7 +236,7 @@ const WorkflowCard: React.FC<WorkflowCardProps> = ({ workflow, onToggle, onEdit,
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Executions</p>
             </div>
             <p className="text-lg font-bold text-slate-900">
-              {workflow.executionCount.toLocaleString()}
+              {Number(workflow.executionCount || 0).toLocaleString()}
             </p>
           </div>
           <div className="text-center">

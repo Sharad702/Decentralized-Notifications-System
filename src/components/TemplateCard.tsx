@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Star, 
@@ -55,6 +55,41 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
   onEdit, 
   onDelete
 }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
+
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMenuOpen((open) => !open);
+  };
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMenuOpen(false);
+    onEdit();
+  };
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMenuOpen(false);
+    onDelete();
+  };
+
   const getTriggerIcon = (type: string) => {
     switch (type) {
       case 'eth_transfer': return <Coins className="w-4 h-4" />;
@@ -122,7 +157,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  <span>{template.createdAt.toLocaleDateString()}</span>
+                  <span>{new Date(template.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
             </div>
@@ -137,7 +172,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
             <button
               onClick={() => onToggleFavorite(template.id)}
               className={`p-2 rounded-lg transition-colors ${
@@ -148,8 +183,15 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
             >
               {template.isFavorite ? <Star className="w-4 h-4 fill-current" /> : <StarOff className="w-4 h-4" />}
             </button>
-            <button onClick={onEdit} className="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Edit</button>
-            <button onClick={onDelete} className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors">Delete</button>
+            <button ref={buttonRef} onClick={handleMenuClick} className="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+            {menuOpen && (
+              <div ref={menuRef} className="absolute right-0 mt-2 w-32 bg-white border border-slate-200 rounded-lg shadow-lg z-20">
+                <button onClick={handleEdit} className="block w-full text-left px-4 py-2 hover:bg-slate-100">Edit</button>
+                <button onClick={handleDelete} className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Delete</button>
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
@@ -196,16 +238,17 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
             </p>
           </div>
           
-          <button
-            onClick={() => onToggleFavorite(template.id)}
-            className={`p-2 rounded-xl transition-all duration-300 ${
-              template.isFavorite 
-                ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200 shadow-lg shadow-yellow-500/25' 
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            {template.isFavorite ? <Star className="w-5 h-5 fill-current" /> : <StarOff className="w-5 h-5" />}
-          </button>
+          <div className="relative">
+            <button ref={buttonRef} onClick={handleMenuClick} className="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+            {menuOpen && (
+              <div ref={menuRef} className="absolute right-0 mt-2 w-32 bg-white border border-slate-200 rounded-lg shadow-lg z-20">
+                <button onClick={handleEdit} className="block w-full text-left px-4 py-2 hover:bg-slate-100">Edit</button>
+                <button onClick={handleDelete} className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Delete</button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Workflow Flow */}
@@ -247,12 +290,19 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            <span>{template.createdAt.toLocaleDateString()}</span>
+            <span>{new Date(template.createdAt).toLocaleDateString()}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={onEdit} className="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Edit</button>
-            <button onClick={onDelete} className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors">Delete</button>
-          </div>
+          <button
+            onClick={() => onToggleFavorite(template.id)}
+            className={`p-2 rounded-lg transition-colors ${
+              template.isFavorite
+                ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+            title={template.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            {template.isFavorite ? <Star className="w-4 h-4 fill-current" /> : <StarOff className="w-4 h-4" />}
+          </button>
         </div>
       </div>
     </motion.div>

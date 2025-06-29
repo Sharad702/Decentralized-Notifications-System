@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { initializeProvider, addWorkflowToWatcher, verifyTransaction } from './services/blockchain.service';
-import { workflowStore, userStore } from './store';
+import { workflowStore, userStore, templateStore } from './store';
 
 dotenv.config();
 
@@ -262,6 +262,62 @@ app.patch('/api/workflows/:id', (req, res) => {
     res.json(updatedWorkflow);
   } else {
     res.status(404).json({ message: 'Workflow not found' });
+  }
+});
+
+// TEMPLATE ROUTES
+
+// Get all templates for a user
+app.get('/api/templates', (req, res) => {
+  const { userAddress } = req.query;
+  if (!userAddress) {
+    return res.status(400).json({ message: 'userAddress query parameter is required' });
+  }
+  const userTemplates = templateStore.getAll().filter(t => t.userAddress.toLowerCase() === (userAddress as string).toLowerCase());
+  res.json(userTemplates);
+});
+
+// Create a new template
+app.post('/api/templates', (req, res) => {
+  const { userAddress, ...templateData } = req.body;
+  if (!userAddress) {
+    return res.status(400).json({ message: 'userAddress is required to create a template' });
+  }
+  const newTemplate = templateStore.add({ ...templateData, userAddress });
+  res.status(201).json(newTemplate);
+});
+
+// Update a template
+app.put('/api/templates/:id', (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+  // Ensure userAddress is not changed
+  delete updates.userAddress;
+
+  // Atomic increment support
+  if (updates.usageCount === 'increment') {
+    const template = templateStore.findById(id);
+    if (template) {
+      updates.usageCount = (template.usageCount || 0) + 1;
+    }
+  }
+
+  const updatedTemplate = templateStore.update(id, updates);
+  if (updatedTemplate) {
+    res.json(updatedTemplate);
+  } else {
+    res.status(404).json({ message: 'Template not found' });
+  }
+});
+
+// Delete a template
+app.delete('/api/templates/:id', (req, res) => {
+  const { id } = req.params;
+  const deleted = templateStore.delete(id);
+  if (deleted) {
+    res.status(204).send();
+  } else {
+    res.status(404).json({ message: 'Template not found' });
   }
 });
 

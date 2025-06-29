@@ -46,7 +46,7 @@ function App() {
   
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [editingWorkflow, setEditingWorkflow] = useState<any | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateWorkflowModal, setShowCreateWorkflowModal] = useState(false);
   const [templates, setTemplates] = useState<Template[]>([]);
 
   const fetchWorkflows = useCallback(async () => {
@@ -131,9 +131,11 @@ function App() {
   const stats = {
     totalWorkflows: workflows.length,
     totalExecutions: workflows.reduce((sum, w) => sum + w.executionCount, 0),
-    successRate: Math.round(
-      workflows.reduce((sum, w) => sum + w.successRate, 0) / workflows.length
-    ),
+    successRate: workflows.length > 0
+      ? Math.round(
+          workflows.reduce((sum, w) => sum + (Number(w.successRate) || 0), 0) / workflows.length
+        )
+      : 0,
     activeWorkflows: workflows.filter(w => w.isActive).length
   };
 
@@ -197,6 +199,7 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
+      await fetchWorkflows(); // Refresh workflows after update
       setEditingWorkflow(null);
     } catch (error) {
       console.error('Failed to update workflow:', error);
@@ -263,6 +266,40 @@ function App() {
     }
   };
 
+  // Add this function to handle workflow modal submit
+  const handleWorkflowModalSubmit = async (data: any, isTemplateUsed: boolean) => {
+    if (isTemplateUsed && data.id) {
+      // Increment usageCount for the template
+      try {
+        const res = await fetch(`${API_URL}/api/templates/${data.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usageCount: 'increment' })
+        });
+        const updated = await res.json();
+        setTemplates(prev => prev.map(t => t.id === data.id ? updated : t));
+        // Create the workflow using the template's data and user input
+        await handleCreateWorkflow({
+          name: data.name,
+          description: data.description,
+          triggerType: data.triggerType,
+          actionType: data.actionType,
+          sourceAddress: data.sourceAddress,
+          actionParams: data.actionParams,
+          message: data.message,
+          isActive: true,
+          executionCount: 0,
+          successRate: 100,
+          createdAt: new Date()
+        });
+      } catch (error) {
+        console.error('Failed to increment template usage or create workflow:', error);
+      }
+    } else {
+      await handleCreateWorkflow(data);
+    }
+  };
+
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard':
@@ -274,6 +311,7 @@ function App() {
             onToggleWorkflow={handleToggleWorkflow}
             onEditWorkflow={handleEditWorkflow}
             onDeleteWorkflow={handleDeleteWorkflow}
+            templates={templates}
           />
         );
       case 'workflows':
@@ -285,6 +323,9 @@ function App() {
               onToggleWorkflow={handleToggleWorkflow}
               onEditWorkflow={handleEditWorkflow}
               onDeleteWorkflow={handleDeleteWorkflow}
+              templates={templates}
+              showCreateWorkflowModal={showCreateWorkflowModal}
+              setShowCreateWorkflowModal={setShowCreateWorkflowModal}
             />
           </div>
         );
@@ -329,10 +370,11 @@ function App() {
       />
       {renderContent()}
       <CreateWorkflowModal
-        isOpen={showCreateModal || !!editingWorkflow}
-        onClose={() => { setShowCreateModal(false); setEditingWorkflow(null); }}
-        onSubmit={showCreateModal ? handleCreateWorkflow : (data) => handleUpdateWorkflow(editingWorkflow.id, data)}
+        isOpen={showCreateWorkflowModal || !!editingWorkflow}
+        onClose={() => { setShowCreateWorkflowModal(false); setEditingWorkflow(null); }}
+        onSubmit={showCreateWorkflowModal ? handleWorkflowModalSubmit : (data) => handleUpdateWorkflow(editingWorkflow.id, data)}
         initialData={editingWorkflow}
+        templates={templates}
       />
     </div>
   );

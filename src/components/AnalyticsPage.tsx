@@ -29,6 +29,7 @@ interface AnalyticsPageProps {
 const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) => {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
   const [selectedMetric, setSelectedMetric] = useState<'executions' | 'success' | 'performance'>('executions');
+  const [hoveredBar, setHoveredBar] = useState<number | null>(null);
 
   const handleRefresh = () => {
     console.log('Reloading analytics data...');
@@ -40,6 +41,20 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) =
   const avgSuccessRate = Math.round(workflows.reduce((sum, w) => sum + w.successRate, 0) / workflows.length) || 0;
   const activeWorkflows = workflows.filter(w => w.isActive).length;
   const totalWorkflows = workflows.length;
+
+  // Aggregate all executions from all workflows
+  const allExecutions = workflows.flatMap(w => (w.executionTimestamps || []).map((ts: string) => ({ ts, workflow: w })));
+  const executionsByDay: Record<string, number> = {};
+
+  allExecutions.forEach(exec => {
+    const day = new Date(exec.ts).toISOString().split('T')[0];
+    executionsByDay[day] = (executionsByDay[day] || 0) + 1;
+  });
+
+  // Build sorted array for the chart
+  const executionTrend: { date: string; executions: number }[] = Object.entries(executionsByDay)
+    .map(([date, executions]) => ({ date, executions: Number(executions) }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const handleExport = () => {
     const dataToExport = workflows.map(w => ({
@@ -65,17 +80,6 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) =
     link.click();
     document.body.removeChild(link);
   };
-
-  // Mock data for charts (in real app, this would come from API)
-  const executionTrend = [
-    { date: '2024-01-15', executions: 45, success: 43 },
-    { date: '2024-01-16', executions: 52, success: 50 },
-    { date: '2024-01-17', executions: 38, success: 37 },
-    { date: '2024-01-18', executions: 67, success: 65 },
-    { date: '2024-01-19', executions: 71, success: 69 },
-    { date: '2024-01-20', executions: 58, success: 56 },
-    { date: '2024-01-21', executions: 84, success: 82 }
-  ];
 
   const workflowPerformance = workflows.map(w => ({
     name: w.name,
@@ -256,12 +260,21 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) =
               <LineChart className="w-8 h-8 text-blue-500" />
             </div>
             
-            <div className="h-64 flex items-end justify-between gap-2">
+            <div className="h-64 flex items-end justify-between gap-2 relative">
               {executionTrend.map((day, index) => (
-                <div key={day.date} className="flex-1 flex flex-col items-center">
+                <div key={day.date} className="flex-1 flex flex-col items-center relative"
+                  onMouseEnter={() => setHoveredBar(index)}
+                  onMouseLeave={() => setHoveredBar(null)}
+                >
+                  {/* Tooltip */}
+                  {hoveredBar === index && (
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-20 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg shadow-lg whitespace-nowrap pointer-events-none">
+                      <div>API Calls: <span className="font-bold">{day.executions}</span></div>
+                    </div>
+                  )}
                   <motion.div
                     initial={{ height: 0 }}
-                    animate={{ height: `${(day.executions / 84) * 100}%` }}
+                    animate={{ height: `${(Number(day.executions) / 84) * 100}%` }}
                     transition={{ delay: index * 0.1, duration: 0.8 }}
                     className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg mb-2 min-h-[20px]"
                   ></motion.div>
@@ -366,7 +379,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) =
                       </span>
                     </td>
                     <td className="p-6">
-                      <div className="font-semibold text-slate-900">{workflow.executions.toLocaleString()}</div>
+                      <div className="font-semibold text-slate-900">{Number(workflow.executions || 0).toLocaleString()}</div>
                     </td>
                     <td className="p-6">
                       <div className="flex items-center gap-2">
