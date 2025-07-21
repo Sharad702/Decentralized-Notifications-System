@@ -34,6 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'traders', label: 'Portfolio', icon: Wallet, isNew: true },
     { id: 'workflows', label: 'Workflows', icon: Workflow },
     { id: 'templates', label: 'Templates', icon: FileText },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -152,7 +153,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <div className="relative z-10 flex items-center gap-4 w-full">
                     <Icon className="w-5 h-5" />
                     <span className="font-medium">{item.label}</span>
-                    {isActive && (
+                    {item.isNew && (
+                      <span className="ml-auto px-2 py-1 bg-gradient-to-r from-blue-400 to-purple-500 text-white text-xs font-bold rounded-full">
+                        📊
+                      </span>
+                    )}
+                    {isActive && !item.isNew && (
                       <motion.div
                         initial={{ opacity: 0, scale: 0 }}
                         animate={{ opacity: 1, scale: 1 }}

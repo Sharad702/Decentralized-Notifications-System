@@ -21,7 +21,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
       bgGradient: 'from-blue-50 to-cyan-50',
       textColor: 'text-blue-700',
       iconBg: 'bg-blue-500',
-      change: '+12%',
+      change: 'N/A',
       changeColor: 'text-green-600'
     },
     {
@@ -32,7 +32,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
       bgGradient: 'from-emerald-50 to-green-50',
       textColor: 'text-emerald-700',
       iconBg: 'bg-emerald-500',
-      change: '+24%',
+      change: 'N/A',
       changeColor: 'text-green-600'
     },
     {
@@ -43,7 +43,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
       bgGradient: 'from-purple-50 to-pink-50',
       textColor: 'text-purple-700',
       iconBg: 'bg-purple-500',
-      change: '+2%',
+      change: 'N/A',
       changeColor: 'text-green-600'
     },
     {
@@ -54,7 +54,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
       bgGradient: 'from-orange-50 to-red-50',
       textColor: 'text-orange-700',
       iconBg: 'bg-orange-500',
-      change: '+8%',
+      change: 'N/A',
       changeColor: 'text-green-600'
     }
   ];

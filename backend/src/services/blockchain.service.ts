@@ -4,6 +4,7 @@ import { sendDiscordNotification } from './discord.service';
 import { sendWebhookNotification } from './webhook.service';
 import { workflowStore, userStore } from '../store';
 import { broadcastUpdate } from '..';
+import axios from 'axios';
 
 let provider: ethers.JsonRpcProvider | ethers.WebSocketProvider;
 
@@ -197,11 +198,14 @@ const handleWorkflowFailure = async (workflow: any, error: any) => {
 };
 
 const handleMatchedWorkflow = async (workflow: any, tx: ethers.TransactionResponse) => {
+  const startTime = Date.now();
   try {
     console.log(`!!! Matched workflow "${workflow.name}" for a transaction to ${tx.to} !!!`);
 
-    // Increment the execution count
-    workflowStore.incrementExecutionCount(workflow.id);
+    // Increment the execution count (now with response time)
+    const endTime = Date.now();
+    const responseTimeMs = endTime - startTime;
+    workflowStore.incrementExecutionCount(workflow.id, responseTimeMs);
 
     // Update total executions for the user
     const user = workflow.userAddress ? userStore.findOrCreateUser(workflow.userAddress) : null;
@@ -314,4 +318,40 @@ const handleMatchedWorkflow = async (workflow: any, tx: ethers.TransactionRespon
 // as the block listener handles everything.
 export const addWorkflowToWatcher = (workflow: any) => {
   console.log(`Workflow "${workflow.name}" for address ${workflow.sourceAddress} has been added. The local block listener will check for its transactions.`);
-}; 
+};
+
+/**
+ * Fetches real-time prices for the given symbols from Binance public API.
+ * @param symbols Array of token symbols, e.g. ['ETH', 'BTC']
+ * @returns Object keyed by symbol, each containing price and percentChange24h
+ */
+export async function getTokenPricesFromBinance(symbols: string[]) {
+  // Binance uses symbols like ETHUSDT, BTCUSDT, etc.
+  const symbolMap: Record<string, string> = {
+    ETH: 'ETHUSDT',
+    BTC: 'BTCUSDT',
+    PEPE: 'PEPEUSDT',
+    LINK: 'LINKUSDT',
+  };
+  const results: Record<string, any> = {};
+  for (const symbol of symbols) {
+    const binanceSymbol = symbolMap[symbol];
+    if (!binanceSymbol) continue;
+    const url = `https://api.binance.com/api/v3/ticker/24hr?symbol=${binanceSymbol}`;
+    try {
+      const { data } = await axios.get(url);
+      results[symbol] = {
+        price: data.lastPrice,
+        percentChange24h: data.priceChangePercent,
+        priceChange24h: data.priceChange
+      };
+    } catch (e) {
+      results[symbol] = {
+        price: 0,
+        percentChange24h: 0,
+        priceChange24h: 0
+      };
+    }
+  }
+  return results;
+} 

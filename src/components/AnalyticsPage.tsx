@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Papa from 'papaparse';
 import { 
@@ -30,6 +30,20 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) =
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
   const [selectedMetric, setSelectedMetric] = useState<'executions' | 'success' | 'performance'>('executions');
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+  const [avgResponseTime, setAvgResponseTime] = useState<string>('...');
+
+  useEffect(() => {
+    fetch('/api/analytics/response-time')
+      .then(res => res.json())
+      .then(data => {
+        if (data && typeof data.averageResponseTimeS === 'number') {
+          setAvgResponseTime(data.averageResponseTimeS.toFixed(2) + 's');
+        } else {
+          setAvgResponseTime('N/A');
+        }
+      })
+      .catch(() => setAvgResponseTime('N/A'));
+  }, [workflows]);
 
   const handleRefresh = () => {
     console.log('Reloading analytics data...');
@@ -94,11 +108,13 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) =
     { type: 'Contract Event', count: workflows.filter(w => w.triggerType === 'contract_event').length, color: 'bg-green-500' }
   ];
 
+  // Calculate change for KPI cards (example: vs previous period)
+  // For now, set to 'N/A' if not available
   const kpiCards = [
     {
       title: 'Total Executions',
       value: totalExecutions.toLocaleString(),
-      change: '+24%',
+      change: 'N/A',
       changeType: 'positive' as const,
       icon: Zap,
       gradient: 'from-blue-500 to-cyan-500',
@@ -107,7 +123,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) =
     {
       title: 'Success Rate',
       value: `${avgSuccessRate}%`,
-      change: '+2.1%',
+      change: 'N/A',
       changeType: 'positive' as const,
       icon: Target,
       gradient: 'from-green-500 to-emerald-500',
@@ -116,7 +132,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) =
     {
       title: 'Active Workflows',
       value: activeWorkflows.toString(),
-      change: '+12%',
+      change: 'N/A',
       changeType: 'positive' as const,
       icon: Activity,
       gradient: 'from-purple-500 to-pink-500',
@@ -124,8 +140,8 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) =
     },
     {
       title: 'Avg Response Time',
-      value: '1.2s',
-      change: '-0.3s',
+      value: avgResponseTime,
+      change: 'N/A',
       changeType: 'positive' as const,
       icon: Clock,
       gradient: 'from-orange-500 to-red-500',

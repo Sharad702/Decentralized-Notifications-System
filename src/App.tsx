@@ -7,6 +7,7 @@ import AnalyticsPage from './components/AnalyticsPage';
 import TemplatesPage from './components/TemplatePage';
 import SettingsPage from './components/SettingsPage';
 import CreateWorkflowModal from './components/CreateWorkflowModal';
+import TradersPage from './components/TradersPage';
 import { useWallet } from './hooks/useWallet';
 
 const API_URL = 'http://localhost:5001';
@@ -128,14 +129,24 @@ function App() {
 
   }, [wallet.isConnected, wallet.isInitializing, wallet.address, handleWorkflowUpdate, fetchWorkflows]);
 
+  const workflowsWithExecutions = workflows.filter(w => w.executionCount > 0);
+  const totalSuccessExecutions = workflowsWithExecutions.reduce(
+    (sum, w) => sum + Math.round(w.executionCount * (w.successRate / 100)),
+    0
+  );
+  const totalExecutionsWithExecutions = workflowsWithExecutions.reduce(
+    (sum, w) => sum + (typeof w.executionCount === 'number' ? w.executionCount : 0),
+    0
+  );
+  const successRate =
+    totalExecutionsWithExecutions > 0
+      ? Math.round((totalSuccessExecutions / totalExecutionsWithExecutions) * 100)
+      : 0;
+
   const stats = {
     totalWorkflows: workflows.length,
-    totalExecutions: workflows.reduce((sum, w) => sum + w.executionCount, 0),
-    successRate: workflows.length > 0
-      ? Math.round(
-          workflows.reduce((sum, w) => sum + (Number(w.successRate) || 0), 0) / workflows.length
-        )
-      : 0,
+    totalExecutions: workflows.reduce((sum, w) => sum + (typeof w.executionCount === 'number' ? w.executionCount : 0), 0),
+    successRate,
     activeWorkflows: workflows.filter(w => w.isActive).length
   };
 
@@ -314,6 +325,15 @@ function App() {
             templates={templates}
           />
         );
+        case 'traders':
+          return (
+            <div className="ml-72">
+              <TradersPage
+                onCreateWorkflow={handleCreateWorkflow}
+                onWorkflowsChanged={fetchWorkflows}
+              />
+            </div>
+          );  
       case 'workflows':
         return (
           <div className="ml-72">

@@ -3,8 +3,10 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
-import { initializeProvider, addWorkflowToWatcher, verifyTransaction } from './services/blockchain.service';
-import { workflowStore, userStore, templateStore } from './store';
+import { initializeProvider, addWorkflowToWatcher, verifyTransaction, getTokenPricesFromBinance } from './services/blockchain.service';
+import { workflowStore, userStore, templateStore, alertStore, portfolioStore } from './store';
+import { sendDiscordNotification } from './services/discord.service';
+import alertRouter from './routes/alert.routes';
 
 dotenv.config();
 
@@ -321,6 +323,145 @@ app.delete('/api/templates/:id', (req, res) => {
   }
 });
 
+// Portfolio API endpoint for real-time prices
+app.get('/api/portfolio', async (req, res) => {
+  try {
+    const symbols = ['ETH', 'BTC', 'PEPE', 'LINK'];
+    const prices = await getTokenPricesFromBinance(symbols);
+
+    // Use the in-memory portfolio store
+    const portfolio = portfolioStore.get();
+
+    // Calculate value using prices and add 24h change fields
+    const portfolioWithValues = portfolio.map(asset => {
+      const price = Number(prices[asset.symbol]?.price) || 0;
+      const percentChange24h = Number(prices[asset.symbol]?.percentChange24h) || 0;
+      const priceChange24h = Number(prices[asset.symbol]?.priceChange24h) || 0;
+      return {
+        ...asset,
+        price: price.toFixed(6),
+        value: (asset.amount * price).toFixed(2),
+        percentChange24h: percentChange24h.toFixed(2),
+        priceChange24h: priceChange24h.toFixed(2)
+      };
+    });
+
+    res.json({ portfolio: portfolioWithValues, prices });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch prices' });
+  }
+});
+
+// PORTFOLIO ALERT ROUTES
+app.use('/api/alerts', alertRouter);
+
+// Test endpoint to trigger an alert and send notification
+app.post('/api/alerts/:id/trigger', async (req, res) => {
+  const { id } = req.params;
+  const alert = alertStore.findById(id);
+  if (!alert) {
+    return res.status(404).json({ message: 'Alert not found' });
+  }
+  // Simulate sending notification (Discord only for now)
+  if (alert.actionType === 'discord' && alert.actionParams?.discordWebhook) {
+    try {
+      await sendDiscordNotification(alert.actionParams.discordWebhook, {
+        content: `Test alert triggered: ${alert.name}\n${alert.description}`
+      });
+      console.log(`Sent Discord notification for alert ${alert.id}`);
+      return res.json({ message: 'Discord notification sent' });
+    } catch (e) {
+      console.error('Failed to send Discord notification:', e);
+      return res.status(500).json({ message: 'Failed to send Discord notification' });
+    }
+  }
+  res.json({ message: 'No notification sent (actionType not supported or missing webhook)' });
+});
+
+// Analytics endpoint for average response time
+app.get('/api/analytics/response-time', (req, res) => {
+  const workflows = workflowStore.getAll();
+  let total = 0;
+  let count = 0;
+  workflows.forEach(wf => {
+    if (wf.responseTimes && wf.responseTimes.length > 0) {
+      total += wf.responseTimes.reduce((a, b) => a + b, 0);
+      count += wf.responseTimes.length;
+    }
+  });
+  const avgMs = count > 0 ? total / count : 0;
+  res.json({ averageResponseTimeMs: avgMs, averageResponseTimeS: avgMs / 1000 });
+});
+
+// Automatic portfolio alert checker (runs every minute)
+setInterval(async () => {
+  const alerts = alertStore.getAll().filter(a => a.status === 'active');
+  if (alerts.length === 0) return;
+  const symbols = ['ETH', 'BTC', 'PEPE', 'LINK'];
+  const prices = await getTokenPricesFromBinance(symbols);
+  // Use the in-memory portfolio store
+  const portfolio = portfolioStore.get();
+  const totalValue = portfolio.reduce((sum, asset) => {
+    const price = Number(prices[asset.symbol]?.price) || 0;
+    return sum + asset.amount * price;
+  }, 0);
+  for (const alert of alerts) {
+    if (alert.type === 'portfolio_value' && alert.threshold) {
+      if (alert.threshold.includes('%') && alert.initialValue) {
+        // Percentage-based alert
+        const percentThreshold = parseFloat(alert.threshold.replace(/[^0-9.\-]/g, ''));
+        const percentChange = ((totalValue - alert.initialValue) / alert.initialValue) * 100;
+        if (Math.abs(percentChange) >= Math.abs(percentThreshold)) {
+          if (alert.actionType === 'discord' && alert.actionParams?.discordWebhook) {
+            await sendDiscordNotification(alert.actionParams.discordWebhook, {
+              content: `Portfolio value changed by ${percentChange.toFixed(2)}% (threshold: ${percentThreshold}%)\nCurrent: $${totalValue.toFixed(2)} | Initial: $${alert.initialValue.toFixed(2)}`
+            });
+            console.log(`Automatic Discord % alert sent for alert ${alert.id}`);
+          }
+          // Instead of setting status: 'triggered', just update lastTriggered
+          alertStore.update(alert.id, { lastTriggered: new Date().toISOString() });
+          // Increment execution count for all workflows linked to this alert
+          const workflowsToUpdate = workflowStore.getAll().filter(w => w.portfolioAlertId === alert.id);
+          for (const workflow of workflowsToUpdate) {
+            workflowStore.incrementExecutionCount(workflow.id);
+            // Optionally update user usage
+            if (workflow.userAddress && typeof workflow.userAddress === 'string') {
+              const userWorkflows = workflowStore.getAll().filter(w => w.userAddress?.toLowerCase() === workflow.userAddress!.toLowerCase());
+              userStore.updateUsage(workflow.userAddress, { executions: userWorkflows.reduce((sum, w) => sum + w.executionCount, 0) });
+            }
+            // Broadcast workflow execution update to all clients
+            const updatedWorkflow = workflowStore.findById(workflow.id);
+            if (updatedWorkflow) {
+              broadcastUpdate({
+                type: 'WORKFLOW_EXECUTED',
+                payload: {
+                  workflowId: updatedWorkflow.id,
+                  executionCount: updatedWorkflow.executionCount,
+                  lastTriggered: updatedWorkflow.lastTriggered,
+                }
+              });
+            }
+          }
+        }
+      } else {
+        // Dollar-based alert (legacy)
+        const thresholdValue = parseFloat(alert.threshold.replace(/[^0-9.]/g, ''));
+        if (totalValue >= thresholdValue) {
+          if (alert.actionType === 'discord' && alert.actionParams?.discordWebhook) {
+            await sendDiscordNotification(alert.actionParams.discordWebhook, {
+              content: `Portfolio value alert: $${totalValue.toFixed(2)} (threshold: $${thresholdValue})`
+            });
+            console.log(`Automatic Discord alert sent for alert ${alert.id}`);
+          }
+          // Instead of setting status: 'triggered', just update lastTriggered
+          alertStore.update(alert.id, { lastTriggered: new Date().toISOString() });
+        }
+      }
+    }
+    // Add more alert types as needed...
+  }
+}, 60000); // Every 60 seconds
+
 server.listen(PORT, () => {
   console.log(`Backend server with WebSocket is running on http://localhost:${PORT}`);
   
@@ -332,3 +473,5 @@ server.listen(PORT, () => {
     addWorkflowToWatcher(workflow);
   }
 }); 
+
+export default app; 

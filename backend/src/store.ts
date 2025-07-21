@@ -6,7 +6,7 @@ export interface Workflow {
   id: string;
   name: string;
   description: string;
-  triggerType: 'eth_transfer' | 'nft_purchase' | 'contract_event';
+  triggerType: 'eth_transfer' | 'nft_purchase' | 'contract_event' | 'portfolio_alert';
   actionType: 'email' | 'webhook' | 'discord';
   sourceAddress: string;
   userAddress?: string;
@@ -23,6 +23,8 @@ export interface Workflow {
   previousExecutionCount?: number;
   notificationRuleId?: string;
   executionTimestamps?: string[];
+  portfolioAlertId?: string; // Link to alert
+  responseTimes?: number[];
 }
 
 const workflows: Workflow[] = [];
@@ -33,7 +35,7 @@ export const workflowStore = {
     workflows.push(workflow);
   },
   findById: (id: string) => workflows.find(w => w.id === id),
-  incrementExecutionCount: (id: string) => {
+  incrementExecutionCount: (id: string, responseTimeMs?: number) => {
     const workflow = workflowStore.findById(id);
     if (workflow) {
       if (workflow.previousExecutionCount === undefined) {
@@ -47,6 +49,10 @@ export const workflowStore = {
       workflow.lastTriggered = new Date().toISOString();
       if (!workflow.executionTimestamps) workflow.executionTimestamps = [];
       workflow.executionTimestamps.push(new Date().toISOString());
+      if (responseTimeMs !== undefined) {
+        if (!workflow.responseTimes) workflow.responseTimes = [];
+        workflow.responseTimes.push(responseTimeMs);
+      }
       console.log(`Incremented execution count for workflow "${workflow.name}" to ${workflow.executionCount}.`);
     }
   },
@@ -77,6 +83,57 @@ export const workflowStore = {
     }
     return undefined;
   },
+};
+
+export interface PortfolioAlert {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+  threshold: string;
+  currentValue: string;
+  targetValue: string;
+  status: 'active' | 'paused' | 'triggered';
+  lastTriggered: string;
+  actionType?: string;
+  actionParams?: {
+    email?: string;
+    webhookUrl?: string;
+    discordWebhook?: string;
+    telegramBot?: string;
+    telegramChat?: string;
+  };
+  initialValue?: number; // Baseline for % alerts
+}
+
+const portfolioAlerts: PortfolioAlert[] = [];
+
+export const alertStore = {
+  getAll: () => portfolioAlerts,
+  add: (alert: Omit<PortfolioAlert, 'id'>) => {
+    const newAlert: PortfolioAlert = {
+      ...alert,
+      id: randomBytes(8).toString('hex'),
+    };
+    portfolioAlerts.push(newAlert);
+    return newAlert;
+  },
+  update: (id: string, updates: Partial<PortfolioAlert>) => {
+    const alert = portfolioAlerts.find(a => a.id === id);
+    if (alert) {
+      Object.assign(alert, updates);
+      return alert;
+    }
+    return undefined;
+  },
+  delete: (id: string) => {
+    const idx = portfolioAlerts.findIndex(a => a.id === id);
+    if (idx !== -1) {
+      return portfolioAlerts.splice(idx, 1)[0];
+    }
+    return undefined;
+  },
+  findById: (id: string) => portfolioAlerts.find(a => a.id === id),
 };
 
 export interface Template {
@@ -311,4 +368,28 @@ export const userStore = {
       return user;
     }
   },
+};
+
+// In-memory portfolio store for dynamic updates
+export interface PortfolioAsset {
+  symbol: string;
+  amount: number;
+  alerts?: any[];
+}
+
+let portfolio: PortfolioAsset[] = [];
+
+export const portfolioStore = {
+  get: () => portfolio,
+  set: (newPortfolio: PortfolioAsset[]) => {
+    portfolio = newPortfolio;
+  },
+  updateAsset: (symbol: string, amount: number) => {
+    const asset = portfolio.find(a => a.symbol === symbol);
+    if (asset) {
+      asset.amount = amount;
+    } else {
+      portfolio.push({ symbol, amount, alerts: [] });
+    }
+  }
 }; 

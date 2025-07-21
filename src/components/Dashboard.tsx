@@ -85,7 +85,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </motion.div>
 
           {/* Stats */}
-          <DashboardStats stats={stats} workflows={workflows} />
+          <DashboardStats stats={stats} />
         </div>
 
         {/* Workflows Section */}
