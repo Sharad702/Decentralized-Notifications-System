@@ -47,15 +47,14 @@ export const verifyTransaction = async (txHash: string, expectedTo: string, expe
 };
 
 export const initializeProvider = () => {
-  const localRpcUrl = 'http://127.0.0.1:8545';
-  console.log(`Initializing provider and connecting to local Hardhat node at ${localRpcUrl}...`);
+  const rpcUrl = process.env.RPC_URL || 'https://sepolia.base.org';
+  console.log(`Initializing provider and connecting to ${rpcUrl}...`);
 
   try {
-    // For a local Hardhat node, a simple JSON-RPC provider is best.
-    provider = new ethers.JsonRpcProvider(localRpcUrl);
+    provider = new ethers.JsonRpcProvider(rpcUrl);
 
     provider.on('block', async (blockNumber) => {
-      console.log(`[Block: ${blockNumber}] New block received from local node.`);
+      console.log(`[Block: ${blockNumber}] New block received from node.`);
       
       const allWorkflows = workflowStore.getAll();
       if (allWorkflows.length === 0) return;
