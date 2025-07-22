@@ -10,8 +10,10 @@ import CreateWorkflowModal from './components/CreateWorkflowModal';
 import TradersPage from './components/TradersPage';
 import { useWallet } from './hooks/useWallet';
 
-const API_URL = 'http://localhost:5001';
-const WS_URL = 'ws://localhost:5001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const WS_URL = import.meta.env.VITE_API_URL ? 
+  import.meta.env.VITE_API_URL.replace('https://', 'wss://').replace('http://', 'ws://') : 
+  'ws://localhost:5001';
 
 // Add Template type (reuse from TemplatePage or centralize in types/index.ts)
 interface Template {
