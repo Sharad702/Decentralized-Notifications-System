@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useAccount } from 'wagmi';
 import { 
   User, 
   Bell, 
@@ -30,14 +31,11 @@ import {
 const API_URL = 'https://decentralized-notifications-system-production.up.railway.app';
 
 interface SettingsPageProps {
-  wallet: {
-    address: string | null;
-    isConnected: boolean;
-    balance: string;
-  };
+  wallet: string | null;
 }
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
+  const { address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState('profile');
   const [showApiKey, setShowApiKey] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -55,9 +53,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
 
   useEffect(() => {
     const fetchSettings = async () => {
-      if (!wallet.isConnected || !wallet.address) return;
+      if (!isConnected || !address) return;
       try {
-        const response = await fetch(`${API_URL}/api/users/${wallet.address}/settings`);
+        const response = await fetch(`${API_URL}/api/users/${address}/settings`);
         if (response.ok) {
           const data = await response.json();
           setSettings((prev: any) => ({ ...prev, ...data }));
@@ -68,9 +66,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
     };
 
     const fetchUsage = async () => {
-      if (!wallet.isConnected || !wallet.address) return;
+      if (!isConnected || !address) return;
       try {
-        const response = await fetch(`${API_URL}/api/users/${wallet.address}/usage`);
+        const response = await fetch(`${API_URL}/api/users/${address}/usage`);
         if (response.ok) {
           const data = await response.json();
           setUsage(data);
@@ -81,9 +79,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
     };
 
     const fetchApiKey = async () => {
-      if (!wallet.isConnected || !wallet.address) return;
+      if (!isConnected || !address) return;
       try {
-        const response = await fetch(`${API_URL}/api/users/${wallet.address}/api-key`);
+        const response = await fetch(`${API_URL}/api/users/${address}/api-key`);
         if (response.ok) {
           const data = await response.json();
           setApiKey(data.apiKey);
@@ -96,7 +94,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
     fetchSettings();
     fetchUsage();
     fetchApiKey();
-  }, [wallet.address, wallet.isConnected]);
+  }, [address, isConnected]);
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -115,10 +113,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
   };
 
   const handleRegenerateApiKey = async () => {
-    if (!wallet.address) return;
+    if (!address) return;
     if (window.confirm('Are you sure you want to regenerate your API key? This will invalidate your old key.')) {
       try {
-        const response = await fetch(`${API_URL}/api/users/${wallet.address}/regenerate-api-key`, {
+        const response = await fetch(`${API_URL}/api/users/${address}/regenerate-api-key`, {
           method: 'POST',
         });
         if (response.ok) {
@@ -138,12 +136,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
     // Optimistically update local state
     setSettings(updatedSettings);
 
-    if (!wallet.address) {
+    if (!address) {
       console.error('Cannot save settings, no wallet connected.');
       return;
     }
     try {
-      await fetch(`${API_URL}/api/users/${wallet.address}/settings`, {
+      await fetch(`${API_URL}/api/users/${address}/settings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedSettings),
@@ -155,13 +153,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
   };
 
   const handleSave = async () => {
-    if (!wallet.address) {
+    if (!address) {
       console.error('Cannot save settings, no wallet connected.');
       return;
     }
     setIsSaving(true);
     try {
-      const response = await fetch(`${API_URL}/api/users/${wallet.address}/settings`, {
+      const response = await fetch(`${API_URL}/api/users/${address}/settings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
@@ -193,11 +191,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
                     <Wallet className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
-                    {wallet.isConnected ? (
+                    {isConnected ? (
                       <>
                         <p className="font-semibold text-slate-900">Connected Wallet</p>
-                        <p className="text-sm text-slate-600 font-mono">{wallet.address}</p>
-                        <p className="text-sm text-slate-600">Balance: {parseFloat(wallet.balance).toFixed(4)} ETH</p>
+                        <p className="text-sm text-slate-600 font-mono">{address}</p>
+                        <p className="text-sm text-slate-600">Balance: {parseFloat(wallet || '0').toFixed(4)} ETH</p>
                       </>
                     ) : (
                       <>
@@ -206,7 +204,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
                       </>
                     )}
                   </div>
-                  <div className={`w-3 h-3 rounded-full ${wallet.isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
                 </div>
               </div>
             </div>
