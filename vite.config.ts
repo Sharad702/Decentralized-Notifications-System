@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': process.env.VITE_API_URL || 'http://localhost:5001',
+      '/api': 'https://decentralized-notifications-system-production.up.railway.app',
     },
   },
   optimizeDeps: {

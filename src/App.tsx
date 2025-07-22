@@ -10,10 +10,8 @@ import CreateWorkflowModal from './components/CreateWorkflowModal';
 import TradersPage from './components/TradersPage';
 import { useWallet } from './hooks/useWallet';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-const WS_URL = import.meta.env.VITE_API_URL ? 
-  import.meta.env.VITE_API_URL.replace('https://', 'wss://').replace('http://', 'ws://') : 
-  'ws://localhost:5001';
+const API_URL = 'https://decentralized-notifications-system-production.up.railway.app';
+const WS_URL = 'wss://decentralized-notifications-system-production.up.railway.app';
 
 // Add Template type (reuse from TemplatePage or centralize in types/index.ts)
 interface Template {
