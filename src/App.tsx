@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { WagmiConfig } from 'wagmi';
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import '@rainbow-me/rainbowkit/styles.css';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import WorkflowsPage from './components/WorkflowsPage';
@@ -8,7 +12,8 @@ import TemplatesPage from './components/TemplatePage';
 import SettingsPage from './components/SettingsPage';
 import CreateWorkflowModal from './components/CreateWorkflowModal';
 import TradersPage from './components/TradersPage';
-import { useWallet } from './hooks/useWallet';
+import { config } from './config/wagmi';
+import { useAccount } from 'wagmi';
 
 const API_URL = 'https://decentralized-notifications-system-production.up.railway.app';
 const WS_URL = 'wss://decentralized-notifications-system-production.up.railway.app';
@@ -41,8 +46,11 @@ interface Template {
   };
 }
 
-function App() {
-  const { wallet, connectWallet, disconnectWallet } = useWallet();
+// Create a client
+const queryClient = new QueryClient();
+
+function AppContent() {
+  const { address, isConnected } = useAccount();
   const [activeSection, setActiveSection] = useState('dashboard');
   
   const [workflows, setWorkflows] = useState<any[]>([]);
@@ -51,18 +59,18 @@ function App() {
   const [templates, setTemplates] = useState<Template[]>([]);
 
   const fetchWorkflows = useCallback(async () => {
-    if (!wallet.isConnected || !wallet.address) {
+    if (!isConnected || !address) {
       setWorkflows([]);
       return;
     }
     try {
-      const response = await fetch(`${API_URL}/api/workflows?userAddress=${wallet.address}`);
+      const response = await fetch(`${API_URL}/api/workflows?userAddress=${address}`);
       const data = await response.json();
       setWorkflows(data);
     } catch (error) {
       console.error("Failed to fetch workflows:", error);
     }
-  }, [wallet.isConnected, wallet.address]);
+  }, [isConnected, address]);
 
   const handleWorkflowUpdate = useCallback((updatedWorkflow: any) => {
     setWorkflows(prevWorkflows => 
@@ -75,13 +83,9 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (wallet.isInitializing) {
-      return; // Wait for wallet connection to be checked
-    }
-
-    if (!wallet.isConnected || !wallet.address) {
+    if (!isConnected || !address) {
       setWorkflows([]);
-      return; // Clear data and do nothing else if not connected
+      return;
     }
 
     fetchWorkflows();
@@ -127,7 +131,7 @@ function App() {
       ws.close();
     };
 
-  }, [wallet.isConnected, wallet.isInitializing, wallet.address, handleWorkflowUpdate, fetchWorkflows]);
+  }, [isConnected, address, handleWorkflowUpdate, fetchWorkflows]);
 
   const workflowsWithExecutions = workflows.filter(w => w.executionCount > 0);
   const totalSuccessExecutions = workflowsWithExecutions.reduce(
@@ -157,7 +161,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...newWorkflowData, userAddress: wallet.address }),
+        body: JSON.stringify({ ...newWorkflowData, userAddress: address }),
       });
       const newWorkflow = await response.json();
       setWorkflows([...workflows, newWorkflow]);
@@ -219,18 +223,18 @@ function App() {
 
   // Fetch templates from backend
   const fetchTemplates = useCallback(async () => {
-    if (!wallet.isConnected || !wallet.address) {
+    if (!isConnected || !address) {
       setTemplates([]);
       return;
     }
     try {
-      const response = await fetch(`${API_URL}/api/templates?userAddress=${wallet.address}`);
+      const response = await fetch(`${API_URL}/api/templates?userAddress=${address}`);
       const data = await response.json();
       setTemplates(data);
     } catch (error) {
       console.error('Failed to fetch templates:', error);
     }
-  }, [wallet.isConnected, wallet.address]);
+  }, [isConnected, address]);
 
   useEffect(() => {
     fetchTemplates();
@@ -242,7 +246,7 @@ function App() {
       const response = await fetch(`${API_URL}/api/templates`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...templateData, userAddress: wallet.address }),
+        body: JSON.stringify({ ...templateData, userAddress: address }),
       });
       const newTemplate = await response.json();
       setTemplates(prev => [...prev, newTemplate]);
@@ -371,7 +375,7 @@ function App() {
       case 'settings':
         return (
           <div className="ml-72">
-            <SettingsPage wallet={wallet} />
+            <SettingsPage wallet={address || null} />
           </div>
         );
       default:
@@ -384,19 +388,42 @@ function App() {
       <Sidebar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
-        wallet={wallet}
-        onConnectWallet={connectWallet}
-        onDisconnectWallet={disconnectWallet}
+        wallet={address || null}
+        onConnectWallet={() => {}} // No-op as wallet is managed by RainbowKit
+        onDisconnectWallet={() => {}} // No-op as wallet is managed by RainbowKit
       />
       {renderContent()}
-      <CreateWorkflowModal
-        isOpen={showCreateWorkflowModal || !!editingWorkflow}
-        onClose={() => { setShowCreateWorkflowModal(false); setEditingWorkflow(null); }}
-        onSubmit={showCreateWorkflowModal ? handleWorkflowModalSubmit : (data) => handleUpdateWorkflow(editingWorkflow.id, data)}
-        initialData={editingWorkflow}
-        templates={templates}
-      />
+      {showCreateWorkflowModal && (
+        <CreateWorkflowModal
+          isOpen={showCreateWorkflowModal}
+          onClose={() => setShowCreateWorkflowModal(false)}
+          onSubmit={(data) => handleCreateWorkflow(data)}
+          initialData={undefined}
+          templates={templates}
+        />
+      )}
+      {editingWorkflow && (
+        <CreateWorkflowModal
+          isOpen={!!editingWorkflow}
+          onClose={() => setEditingWorkflow(null)}
+          onSubmit={(data) => handleUpdateWorkflow(editingWorkflow.id, data)}
+          initialData={editingWorkflow}
+          templates={templates}
+        />
+      )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <WagmiConfig config={config}>
+        <RainbowKitProvider>
+          <AppContent />
+        </RainbowKitProvider>
+      </WagmiConfig>
+    </QueryClientProvider>
   );
 }
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { 
   LayoutDashboard, 
   Workflow, 
@@ -15,12 +16,7 @@ import {
 interface SidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
-  wallet: {
-    address: string | null;
-    isConnected: boolean;
-    isInitializing: boolean;
-    balance: string;
-  };
+  wallet: string | null;
   onConnectWallet: () => void;
   onDisconnectWallet: () => void;
 }
@@ -68,55 +64,76 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Wallet Connection */}
       <div className="p-6 border-b border-slate-700/50">
-        {wallet.isInitializing ? (
-          <div className="flex items-center justify-center bg-slate-800 rounded-2xl p-4 h-[116px]">
-            <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
-          </div>
-        ) : wallet.isConnected ? (
-          <motion.div 
-            className="relative overflow-hidden bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl p-4 border border-slate-600/50"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-blue-500/10"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <div className='flex items-center gap-3'>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-green-400">Wallet Connected</span>
+        <ConnectButton.Custom>
+          {({
+            account,
+            chain,
+            openAccountModal,
+            openConnectModal,
+            mounted,
+          }) => {
+            const ready = mounted;
+            const connected = ready && account && chain;
+
+            if (!ready) {
+              return (
+                <div className="flex items-center justify-center bg-slate-800 rounded-2xl p-4 h-[116px]">
+                  <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
                 </div>
-                <button 
-                  onClick={onDisconnectWallet}
-                  className="text-xs text-slate-400 hover:text-white transition-colors duration-200"
+              );
+            }
+
+            if (connected) {
+              return (
+                <motion.div 
+                  className="relative overflow-hidden bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl p-4 border border-slate-600/50"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  Disconnect
-                </button>
-              </div>
-              <div className="text-xs text-slate-300 font-mono mb-2 bg-slate-900/50 px-3 py-2 rounded-lg">
-                {wallet.address?.slice(0, 8)}...{wallet.address?.slice(-6)}
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-white">
-                  {parseFloat(wallet.balance).toFixed(4)} ETH
-                </span>
-                <Wallet className="w-4 h-4 text-slate-400" />
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.button
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onConnectWallet}
-            className="w-full relative overflow-hidden bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-4 rounded-2xl font-medium transition-all duration-300 flex items-center gap-3 shadow-lg hover:shadow-xl"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity"></div>
-            <Wallet className="w-5 h-5" />
-            <span>Connect Wallet</span>
-            <ChevronRight className="w-4 h-4 ml-auto" />
-          </motion.button>
-        )}
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-blue-500/10"></div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <div className='flex items-center gap-3'>
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span className="text-sm font-medium text-green-400">Wallet Connected</span>
+                      </div>
+                      <button 
+                        onClick={openAccountModal}
+                        className="text-xs text-slate-400 hover:text-white transition-colors duration-200"
+                      >
+                        Disconnect
+                      </button>
+                    </div>
+                    <div className="text-xs text-slate-300 font-mono mb-2 bg-slate-900/50 px-3 py-2 rounded-lg">
+                      {account.address?.slice(0, 8)}...{account.address?.slice(-6)}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-white">
+                        {account.displayBalance ? `${account.displayBalance} ETH` : '0 ETH'}
+                      </span>
+                      <Wallet className="w-4 h-4 text-slate-400" />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            }
+
+            return (
+              <motion.button
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={openConnectModal}
+                className="w-full relative overflow-hidden bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-4 rounded-2xl font-medium transition-all duration-300 flex items-center gap-3 shadow-lg hover:shadow-xl"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity"></div>
+                <Wallet className="w-5 h-5" />
+                <span>Connect Wallet</span>
+                <ChevronRight className="w-4 h-4 ml-auto" />
+              </motion.button>
+            );
+          }}
+        </ConnectButton.Custom>
       </div>
 
       {/* Navigation */}
