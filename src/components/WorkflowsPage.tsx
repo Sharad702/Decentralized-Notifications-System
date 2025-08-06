@@ -26,7 +26,7 @@ import CreateWorkflowModal from './CreateWorkflowModal';
 
 interface WorkflowsPageProps {
   workflows: any[];
-  onCreateWorkflow: (workflow: any) => void;
+  onCreateWorkflow: (workflow: any, isTemplateUsed?: boolean) => void;
   onToggleWorkflow: (id: string) => void;
   onEditWorkflow: (id: string) => void;
   onDeleteWorkflow: (id: string) => void;

@@ -282,7 +282,7 @@ function AppContent() {
   };
 
   // Add this function to handle workflow modal submit
-  const handleWorkflowModalSubmit = async (data: any, isTemplateUsed: boolean) => {
+  const handleWorkflowModalSubmit = async (data: any, isTemplateUsed?: boolean) => {
     if (isTemplateUsed && data.id) {
       // Increment usageCount for the template
       try {
@@ -322,7 +322,7 @@ function AppContent() {
           <Dashboard
             workflows={workflows}
             stats={stats}
-            onCreateWorkflow={handleCreateWorkflow}
+            onCreateWorkflow={handleWorkflowModalSubmit}
             onToggleWorkflow={handleToggleWorkflow}
             onEditWorkflow={handleEditWorkflow}
             onDeleteWorkflow={handleDeleteWorkflow}
@@ -338,21 +338,21 @@ function AppContent() {
               />
             </div>
           );  
-      case 'workflows':
-        return (
-          <div className="ml-72">
-            <WorkflowsPage
-              workflows={workflows}
-              onCreateWorkflow={handleCreateWorkflow}
-              onToggleWorkflow={handleToggleWorkflow}
-              onEditWorkflow={handleEditWorkflow}
-              onDeleteWorkflow={handleDeleteWorkflow}
-              templates={templates}
-              showCreateWorkflowModal={showCreateWorkflowModal}
-              setShowCreateWorkflowModal={setShowCreateWorkflowModal}
-            />
-          </div>
-        );
+              case 'workflows':
+          return (
+            <div className="ml-72">
+              <WorkflowsPage
+                workflows={workflows}
+                onCreateWorkflow={handleWorkflowModalSubmit}
+                onToggleWorkflow={handleToggleWorkflow}
+                onEditWorkflow={handleEditWorkflow}
+                onDeleteWorkflow={handleDeleteWorkflow}
+                templates={templates}
+                showCreateWorkflowModal={showCreateWorkflowModal}
+                setShowCreateWorkflowModal={setShowCreateWorkflowModal}
+              />
+            </div>
+          );
       case 'templates':
         return (
           <div className="ml-72">
