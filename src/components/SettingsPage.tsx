@@ -42,7 +42,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
   const [settings, setSettings] = useState<any>({
     profile: {},
     notifications: {
-      discord: true // Make Discord active by default
+      discord: true // Make Discord enabled by default
     },
     security: {},
     integrations: {},
@@ -60,7 +60,23 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
         const response = await fetch(`${API_URL}/api/users/${address}/settings`);
         if (response.ok) {
           const data = await response.json();
-          setSettings((prev: any) => ({ ...prev, ...data }));
+          // Force Discord notifications to be enabled by default unless explicitly set to false
+          const notifications = data.notifications || {};
+          // Always set Discord to true unless the user has explicitly disabled it
+          // The backend might be returning false by default, so we need to be more explicit
+          if (notifications.discord === false) {
+            // User explicitly disabled it, keep it false
+          } else {
+            // Set to true for any other case (undefined, null, or any other value)
+            notifications.discord = true;
+          }
+          console.log('Backend settings:', data);
+          console.log('Processed notifications:', notifications);
+          setSettings((prev: any) => ({ 
+            ...prev, 
+            ...data,
+            notifications: { ...notifications }
+          }));
         }
       } catch (error) {
         console.error('Failed to fetch settings:', error);
@@ -321,7 +337,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
                           onChange={(e) => {
                             const newSettings = {
                               ...settings,
-                              notifications: { ...settings.notifications, [channel.key]: e.target.checked }
+                              notifications: { 
+                                ...settings.notifications, 
+                                [channel.key]: e.target.checked 
+                              }
                             };
                             handleInstantSave(newSettings);
                           }}
