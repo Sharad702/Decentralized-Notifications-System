@@ -76,6 +76,7 @@ const TradersPage: React.FC<TradersPageProps> = ({ onCreateWorkflow, onWorkflows
   // Portfolio alerts state from API
   const [portfolioAlerts, setPortfolioAlerts] = useState<any[]>([]);
   const [loadingAlerts, setLoadingAlerts] = useState(true);
+  const [avgResponseTime, setAvgResponseTime] = useState<string>('N/A');
 
   // Fetch alerts from backend
   useEffect(() => {
@@ -91,6 +92,24 @@ const TradersPage: React.FC<TradersPageProps> = ({ onCreateWorkflow, onWorkflows
       setLoadingAlerts(false);
     }
     fetchAlerts();
+  }, []);
+
+  // Fetch average response time
+  useEffect(() => {
+    async function fetchAvgResponseTime() {
+      try {
+        const res = await fetch('/api/analytics/response-time');
+        const data = await res.json();
+        if (data && typeof data.averageResponseTimeS === 'number') {
+          setAvgResponseTime(data.averageResponseTimeS.toFixed(2) + 's');
+        } else {
+          setAvgResponseTime('N/A');
+        }
+      } catch (e) {
+        setAvgResponseTime('N/A');
+      }
+    }
+    fetchAvgResponseTime();
   }, []);
 
   // Remove hardcoded portfolioStats and compute dynamically
@@ -563,18 +582,24 @@ const TradersPage: React.FC<TradersPageProps> = ({ onCreateWorkflow, onWorkflows
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-green-50 rounded-xl">
             <p className="text-sm font-semibold text-green-700 mb-1">Successful Alerts</p>
-            <p className="text-2xl font-bold text-green-800">24</p>
+            <p className="text-2xl font-bold text-green-800">
+              {portfolioAlerts.filter(alert => alert.status === 'active' && alert.lastTriggered !== 'Never').length}
+            </p>
             <p className="text-xs text-green-600">This month</p>
           </div>
           <div className="p-4 bg-blue-50 rounded-xl">
             <p className="text-sm font-semibold text-blue-700 mb-1">Average Response Time</p>
-            <p className="text-2xl font-bold text-blue-800">1.2s</p>
+            <p className="text-2xl font-bold text-blue-800">
+              {avgResponseTime || 'N/A'}
+            </p>
             <p className="text-xs text-blue-600">Real-time alerts</p>
           </div>
           <div className="p-4 bg-purple-50 rounded-xl">
-            <p className="text-sm font-semibold text-purple-700 mb-1">Profit from Alerts</p>
-            <p className="text-2xl font-bold text-purple-800">+$2,450</p>
-            <p className="text-xs text-purple-600">This month</p>
+            <p className="text-sm font-semibold text-purple-700 mb-1">Active Alerts</p>
+            <p className="text-2xl font-bold text-purple-800">
+              {portfolioAlerts.filter(alert => alert.status === 'active').length}
+            </p>
+            <p className="text-xs text-purple-600">Currently active</p>
           </div>
         </div>
       </div>

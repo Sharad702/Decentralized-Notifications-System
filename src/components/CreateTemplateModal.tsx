@@ -97,41 +97,41 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ isOpen, onClo
   ];
 
   const actionOptions = [
-    {
-      id: 'email',
-      label: 'Send Email',
-      description: 'Send notification via email',
-      icon: Mail,
-      color: 'blue'
-    },
-    {
-      id: 'webhook',
-      label: 'Call Webhook',
-      description: 'Send HTTP request to webhook',
-      icon: Webhook,
-      color: 'green'
-    },
+    // {
+    //   id: 'email',
+    //   label: 'Send Email',
+    //   description: 'Send notification via email',
+    //   icon: Mail,
+    //   color: 'blue'
+    // },
+    // {
+    //   id: 'webhook',
+    //   label: 'Call Webhook',
+    //   description: 'Send HTTP request to webhook',
+    //   icon: Webhook,
+    //   color: 'green'
+    // },
     {
       id: 'discord',
       label: 'Discord Message',
       description: 'Send message to Discord channel',
       icon: MessageSquare,
       color: 'indigo'
-    },
-    {
-      id: 'slack',
-      label: 'Slack Message',
-      description: 'Send message to Slack channel',
-      icon: MessageSquare,
-      color: 'purple'
-    },
-    {
-      id: 'telegram',
-      label: 'Telegram Message',
-      description: 'Send message via Telegram bot',
-      icon: MessageSquare,
-      color: 'cyan'
     }
+    // {
+    //   id: 'slack',
+    //   label: 'Slack Message',
+    //   description: 'Send message to Slack channel',
+    //   icon: MessageSquare,
+    //   color: 'purple'
+    // },
+    // {
+    //   id: 'telegram',
+    //   label: 'Telegram Message',
+    //   description: 'Send message via Telegram bot',
+    //   icon: MessageSquare,
+    //   color: 'cyan'
+    // }
   ];
 
   const messageVariables = [
@@ -447,7 +447,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ isOpen, onClo
 
             <div className="space-y-6">
               {/* Subject Line (for email) */}
-              {formData.actionType === 'email' && (
+              {/* {formData.actionType === 'email' && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Email Subject *
@@ -464,7 +464,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ isOpen, onClo
                     placeholder="e.g., 🚨 {{workflow_name}} Alert - {{trigger_data}}"
                   />
                 </div>
-              )}
+              )} */}
 
               {/* Message Body */}
               <div>

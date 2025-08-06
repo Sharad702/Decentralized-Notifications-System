@@ -109,18 +109,18 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
   ];
 
   const actionOptions = [
-    {
-      id: 'email',
-      label: 'Send Email',
-      description: 'Send notification via email',
-      icon: Mail
-    },
-    {
-      id: 'webhook',
-      label: 'Call Webhook',
-      description: 'Send HTTP request to webhook',
-      icon: Webhook
-    },
+    // {
+    //   id: 'email',
+    //   label: 'Send Email',
+    //   description: 'Send notification via email',
+    //   icon: Mail
+    // },
+    // {
+    //   id: 'webhook',
+    //   label: 'Call Webhook',
+    //   description: 'Send HTTP request to webhook',
+    //   icon: Webhook
+    // },
     {
       id: 'discord',
       label: 'Discord Message',
@@ -353,7 +353,7 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Action Configuration
                     </label>
-                    {form.actionType === 'email' && (
+                    {/* {form.actionType === 'email' && (
                       <input
                         type="email"
                         required
@@ -378,7 +378,7 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="https://api.example.com/webhook"
                       />
-                    )}
+                    )} */}
                     {form.actionType === 'discord' && (
                       <input
                         type="url"
@@ -452,11 +452,11 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
                   {/* Action Param (email/webhook/discord) */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {selectedTemplate.actionType === 'email' && 'Email Address'}
-                      {selectedTemplate.actionType === 'webhook' && 'Webhook URL'}
+                      {/* {selectedTemplate.actionType === 'email' && 'Email Address'} */}
+                      {/* {selectedTemplate.actionType === 'webhook' && 'Webhook URL'} */}
                       {selectedTemplate.actionType === 'discord' && 'Discord Webhook URL'}
                     </label>
-                    {selectedTemplate.actionType === 'email' && (
+                    {/* {selectedTemplate.actionType === 'email' && (
                       <input
                         type="email"
                         required
@@ -475,7 +475,7 @@ const CreateWorkflowModal: React.FC<CreateWorkflowModalProps> = ({ isOpen, onClo
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="https://api.example.com/webhook"
                       />
-                    )}
+                    )} */}
                     {selectedTemplate.actionType === 'discord' && (
                       <input
                         type="url"

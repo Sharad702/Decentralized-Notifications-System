@@ -41,7 +41,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
   const [copied, setCopied] = useState(false);
   const [settings, setSettings] = useState<any>({
     profile: {},
-    notifications: {},
+    notifications: {
+      discord: true // Make Discord active by default
+    },
     security: {},
     integrations: {},
   });
@@ -302,9 +304,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
               <h3 className="text-lg font-semibold text-slate-900 mb-4">Notification Channels</h3>
               <div className="space-y-4">
                 {[
-                  { key: 'email', label: 'Email Notifications', icon: Mail },
+                  // { key: 'email', label: 'Email Notifications', icon: Mail },
                   { key: 'discord', label: 'Discord Notifications', icon: MessageSquare },
-                  { key: 'webhook', label: 'Webhook Notifications', icon: Webhook }
+                  // { key: 'webhook', label: 'Webhook Notifications', icon: Webhook }
                 ].map((channel) => {
                   const Icon = channel.icon;
                   return (
@@ -418,7 +420,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
             <div>
               <h3 className="text-lg font-semibold text-slate-900 mb-4">Integration Settings</h3>
               <div className="space-y-6">
-                <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200">
+                {/* <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200">
                   <div className="flex items-center gap-3 mb-4">
                     <Mail className="w-6 h-6 text-blue-500" />
                     <div>
@@ -436,7 +438,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="your-email@example.com"
                   />
-                </div>
+                </div> */}
 
                 <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200">
                   <div className="flex items-center gap-3 mb-4">
@@ -458,7 +460,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
                   />
                 </div>
 
-                <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200">
+                {/* <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200">
                   <div className="flex items-center gap-3 mb-4">
                     <Webhook className="w-6 h-6 text-green-500" />
                     <div>
@@ -476,7 +478,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="https://api.example.com/webhook"
                   />
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
