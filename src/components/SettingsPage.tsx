@@ -193,13 +193,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
                     <Wallet className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
-                    {isConnected ? (
-                      <>
-                        <p className="font-semibold text-slate-900">Connected Wallet</p>
-                        <p className="text-sm text-slate-600 font-mono">{address}</p>
-                        <p className="text-sm text-slate-600">Balance: {parseFloat(wallet || '0').toFixed(4)} ETH</p>
-                      </>
-                    ) : (
+                                         {isConnected ? (
+                       <>
+                         <p className="font-semibold text-slate-900">Connected Wallet</p>
+                         <p className="text-sm text-slate-600 font-mono">{address}</p>
+                       </>
+                     ) : (
                       <>
                         <p className="font-semibold text-slate-900">No Wallet Connected</p>
                         <p className="text-sm text-slate-600">Connect your wallet to use BlockFlow</p>
@@ -318,7 +317,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ wallet }) => {
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={settings.notifications?.[channel.key as keyof typeof settings.notifications] || false}
+                          checked={settings.notifications?.[channel.key as keyof typeof settings.notifications] ?? (channel.key === 'discord' ? true : false)}
                           onChange={(e) => {
                             const newSettings = {
                               ...settings,
