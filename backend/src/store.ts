@@ -257,7 +257,7 @@ export const userStore = {
         settings: {
           notifications: {
             email: true,
-            discord: false,
+            discord: true, // Changed from false to true - Discord enabled by default
             webhook: false,
             executionAlerts: true,
             failureAlerts: true,
