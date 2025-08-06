@@ -295,7 +295,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) =
                     className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg mb-2 min-h-[20px]"
                   ></motion.div>
                   <span className="text-xs text-slate-500 font-medium">
-                    {new Date(day.date).getDate()}
+                    {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 </div>
               ))}
