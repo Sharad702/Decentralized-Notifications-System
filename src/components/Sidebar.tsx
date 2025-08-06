@@ -105,14 +105,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                         Disconnect
                       </button>
                     </div>
-                    <div className="text-xs text-slate-300 font-mono mb-2 bg-slate-900/50 px-3 py-2 rounded-lg">
+                    <div className="text-xs text-slate-300 font-mono bg-slate-900/50 px-3 py-2 rounded-lg">
                       {account.address?.slice(0, 8)}...{account.address?.slice(-6)}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-white">
-                        {account.displayBalance ? `${account.displayBalance} ETH` : '0 ETH'}
-                      </span>
-                      <Wallet className="w-4 h-4 text-slate-400" />
                     </div>
                   </div>
                 </motion.div>
