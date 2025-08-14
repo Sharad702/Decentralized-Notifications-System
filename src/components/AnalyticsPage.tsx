@@ -175,11 +175,10 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) =
             </div>
             
             <div className="flex items-center gap-4">
-              {/* Time Range Filter - Hidden on mobile */}
               <select
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value as any)}
-                className="hidden lg:block px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
+                className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
               >
                 <option value="7d">Last 7 days</option>
                 <option value="30d">Last 30 days</option>
@@ -187,12 +186,11 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ workflows, onRefresh }) =
                 <option value="1y">Last year</option>
               </select>
               
-              {/* Refresh Button - Hidden on mobile */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleRefresh}
-                className="hidden lg:flex p-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+                className="p-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
               >
                 <RefreshCw className="w-5 h-5 text-slate-600" />
               </motion.button>

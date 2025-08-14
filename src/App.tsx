@@ -331,7 +331,7 @@ function AppContent() {
         );
         case 'traders':
           return (
-            <div className="lg:ml-72">
+            <div className="ml-72">
               <TradersPage
                 onCreateWorkflow={handleCreateWorkflow}
                 onWorkflowsChanged={fetchWorkflows}
@@ -340,7 +340,7 @@ function AppContent() {
           );  
               case 'workflows':
           return (
-            <div className="lg:ml-72">
+            <div className="ml-72">
               <WorkflowsPage
                 workflows={workflows}
                 onCreateWorkflow={handleWorkflowModalSubmit}
@@ -355,7 +355,7 @@ function AppContent() {
           );
       case 'templates':
         return (
-          <div className="lg:ml-72">
+          <div className="ml-72">
             <TemplatesPage
               onCreateWorkflow={handleCreateWorkflow}
               templates={templates}
@@ -368,13 +368,13 @@ function AppContent() {
         );
       case 'analytics':
         return (
-          <div className="lg:ml-72">
+          <div className="ml-72">
             <AnalyticsPage workflows={workflows} onRefresh={fetchWorkflows} />
           </div>
         );
       case 'settings':
         return (
-          <div className="lg:ml-72">
+          <div className="ml-72">
             <SettingsPage wallet={address || null} />
           </div>
         );
