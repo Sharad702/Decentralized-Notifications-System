@@ -60,7 +60,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8 lg:mb-12">
       {statCards.map((card, index) => {
         const Icon = card.icon;
         
@@ -71,7 +71,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.6, delay: index * 0.1 }}
             whileHover={{ y: -8, scale: 1.02 }}
-            className={`relative overflow-hidden bg-gradient-to-br ${card.bgGradient} rounded-3xl p-8 border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-300 backdrop-blur-sm`}
+            className={`relative overflow-hidden bg-gradient-to-br ${card.bgGradient} rounded-3xl p-4 lg:p-8 border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-300 backdrop-blur-sm`}
           >
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-5">
@@ -79,20 +79,20 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
             </div>
             
             {/* Floating Elements */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-white/20 to-transparent rounded-full blur-xl"></div>
+            <div className="absolute -top-4 -right-4 w-16 h-16 lg:w-24 lg:h-24 bg-gradient-to-br from-white/20 to-transparent rounded-full blur-xl"></div>
             
             <div className="relative z-10">
-              <div className="flex items-start justify-between mb-6">
+              <div className="flex items-start justify-between mb-4 lg:mb-6">
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wider">
+                  <p className="text-xs lg:text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wider">
                     {card.title}
                   </p>
                   <div className="flex items-baseline gap-2">
-                    <p className={`text-4xl font-bold ${card.textColor}`}>
+                    <p className={`text-2xl lg:text-4xl font-bold ${card.textColor}`}>
                       {card.value}
                     </p>
-                    <span className={`text-sm font-semibold ${card.changeColor} flex items-center gap-1`}>
-                      <TrendingUp className="w-3 h-3" />
+                    <span className={`text-xs lg:text-sm font-semibold ${card.changeColor} flex items-center gap-1`}>
+                      <TrendingUp className="w-2 h-2 lg:w-3 lg:h-3" />
                       {card.change}
                     </span>
                   </div>
@@ -100,19 +100,19 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
                 
                 <div className="relative">
                   <div className={`absolute inset-0 bg-gradient-to-r ${card.gradient} rounded-2xl blur-lg opacity-30`}></div>
-                  <div className={`relative p-4 bg-gradient-to-r ${card.gradient} rounded-2xl shadow-lg`}>
-                    <Icon className="w-7 h-7 text-white" />
+                  <div className={`relative p-2 lg:p-4 bg-gradient-to-r ${card.gradient} rounded-2xl shadow-lg`}>
+                    <Icon className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
                   </div>
                 </div>
               </div>
               
               {/* Progress Bar */}
-              <div className="w-full bg-white/50 rounded-full h-2 mb-3">
+              <div className="w-full bg-white/50 rounded-full h-1.5 lg:h-2 mb-2 lg:mb-3">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(100, (typeof card.value === 'string' ? parseInt(card.value) : card.value) * 10)}%` }}
                   transition={{ duration: 1.5, delay: index * 0.2 }}
-                  className={`h-2 bg-gradient-to-r ${card.gradient} rounded-full shadow-sm`}
+                  className={`h-1.5 lg:h-2 bg-gradient-to-r ${card.gradient} rounded-full shadow-sm`}
                 ></motion.div>
               </div>
               
