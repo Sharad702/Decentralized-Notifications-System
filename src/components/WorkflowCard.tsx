@@ -40,19 +40,19 @@ const WorkflowCard: React.FC<WorkflowCardProps> = ({ workflow, onToggle, onEdit,
 
   const getTriggerIcon = (type: string) => {
     switch (type) {
-      case 'eth_transfer': return <Coins className="w-5 h-5" />;
-      case 'nft_purchase': return <Palette className="w-5 h-5" />;
-      case 'contract_event': return <Activity className="w-5 h-5" />;
-      default: return <Activity className="w-5 h-5" />;
+      case 'eth_transfer': return <Coins className="w-4 h-4 lg:w-5 lg:h-5" />;
+      case 'nft_purchase': return <Palette className="w-4 h-4 lg:w-5 lg:h-5" />;
+      case 'contract_event': return <Activity className="w-4 h-4 lg:w-5 lg:h-5" />;
+      default: return <Activity className="w-4 h-4 lg:w-5 lg:h-5" />;
     }
   };
 
   const getActionIcon = (type: string) => {
     switch (type) {
-      case 'email': return <Mail className="w-5 h-5" />;
-      case 'webhook': return <Webhook className="w-5 h-5" />;
-      case 'discord': return <MessageSquare className="w-5 h-5" />;
-      default: return <Webhook className="w-5 h-5" />;
+      case 'email': return <Mail className="w-4 h-4 lg:w-5 lg:h-5" />;
+      case 'webhook': return <Webhook className="w-4 h-4 lg:w-5 lg:h-5" />;
+      case 'discord': return <MessageSquare className="w-4 h-4 lg:w-5 lg:h-5" />;
+      default: return <Webhook className="w-4 h-4 lg:w-5 lg:h-5" />;
     }
   };
 
@@ -107,16 +107,16 @@ const WorkflowCard: React.FC<WorkflowCardProps> = ({ workflow, onToggle, onEdit,
       <div className={`absolute top-0 left-0 right-0 h-1 ${workflow.isActive ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-gradient-to-r from-gray-300 to-gray-400'}`}></div>
 
       {/* Header */}
-      <div className="relative z-10 p-8 pb-6">
-        <div className="flex items-start justify-between mb-6">
+      <div className="relative z-10 p-6 lg:p-8 pb-4 lg:pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-0 mb-4 lg:mb-6">
           <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <div className={`w-3 h-3 rounded-full ${workflow.isActive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
-              <span className={`text-sm font-semibold ${workflow.isActive ? 'text-green-600' : 'text-gray-600'}`}>
+            <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-3">
+              <div className={`w-2 h-2 lg:w-3 lg:h-3 rounded-full ${workflow.isActive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+              <span className={`text-xs lg:text-sm font-semibold ${workflow.isActive ? 'text-green-600' : 'text-gray-600'}`}>
                 {workflow.isActive ? 'Active' : 'Paused'}
               </span>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
+            <h3 className="text-lg lg:text-xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
               {workflow.name}
             </h3>
             <p className="text-slate-600 text-sm leading-relaxed">
@@ -124,30 +124,30 @@ const WorkflowCard: React.FC<WorkflowCardProps> = ({ workflow, onToggle, onEdit,
             </p>
           </div>
           
-          <div className="relative flex items-center gap-2 ml-4">
+          <div className="relative flex items-center justify-center sm:justify-end gap-2 sm:ml-4">
             {/* Play/Pause Button */}
             <motion.button
               whileHover={{ scale: 1.1, rotate: 12 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onToggle(workflow.id)}
-              className={`p-3 rounded-2xl transition-colors ${
+              className={`p-2 lg:p-3 rounded-2xl transition-colors ${
                 workflow.isActive
                   ? 'bg-green-100 text-green-600 hover:bg-green-200'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
               aria-label={workflow.isActive ? 'Pause Workflow' : 'Play Workflow'}
             >
-              {workflow.isActive ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              {workflow.isActive ? <Pause className="w-4 h-4 lg:w-5 lg:h-5" /> : <Play className="w-4 h-4 lg:w-5 lg:h-5" />}
             </motion.button>
             {/* 3-dots Menu Button */}
             <motion.button
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsMenuOpen((open) => !open)}
-              className="p-3 rounded-2xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all duration-300 z-20"
+              className="p-2 lg:p-3 rounded-2xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all duration-300 z-20"
               aria-label="Open menu"
             >
-              <MoreVertical className="w-5 h-5" />
+              <MoreVertical className="w-4 h-4 lg:w-5 lg:h-5" />
             </motion.button>
             <AnimatePresence>
               {isMenuOpen && (
@@ -166,24 +166,24 @@ const WorkflowCard: React.FC<WorkflowCardProps> = ({ workflow, onToggle, onEdit,
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: -20 }}
                     transition={{ duration: 0.18 }}
-                    className="absolute top-full right-0 mt-2 w-48 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200/50 z-30"
+                    className="absolute top-full right-0 mt-2 w-40 lg:w-48 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200/50 z-30"
                   >
                     <ul className="p-2">
                       <li>
                         <button 
                           onClick={() => { onEdit(workflow.id); setIsMenuOpen(false); }}
-                          className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700 font-semibold"
+                          className="w-full text-left flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg hover:bg-slate-100 text-slate-700 font-semibold text-sm lg:text-base"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-3 h-3 lg:w-4 lg:h-4" />
                           Edit
                         </button>
                       </li>
                       <li>
                         <button 
                           onClick={() => { onDelete(workflow.id); setIsMenuOpen(false); }}
-                          className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-50 text-red-600 font-semibold"
+                          className="w-full text-left flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg hover:bg-red-50 text-red-600 font-semibold text-sm lg:text-base"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3 lg:w-4 lg:h-4" />
                           Delete
                         </button>
                       </li>
@@ -196,13 +196,13 @@ const WorkflowCard: React.FC<WorkflowCardProps> = ({ workflow, onToggle, onEdit,
         </div>
 
         {/* Workflow Flow */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 lg:gap-4 mb-4 lg:mb-6">
           <motion.div 
             whileHover={{ scale: 1.05 }}
-            className={`flex items-center gap-3 px-4 py-3 ${triggerColors.bg} ${triggerColors.text} rounded-2xl border ${triggerColors.border} shadow-sm`}
+            className={`flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 ${triggerColors.bg} ${triggerColors.text} rounded-2xl border ${triggerColors.border} shadow-sm`}
           >
             {getTriggerIcon(workflow.triggerType)}
-            <span className="text-sm font-semibold">
+            <span className="text-xs lg:text-sm font-semibold">
               {getTriggerLabel(workflow.triggerType)}
             </span>
           </motion.div>
@@ -210,17 +210,17 @@ const WorkflowCard: React.FC<WorkflowCardProps> = ({ workflow, onToggle, onEdit,
           <motion.div
             animate={{ x: [0, 5, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="flex-shrink-0"
+            className="flex-shrink-0 flex justify-center sm:justify-start"
           >
-            <ArrowRight className="w-6 h-6 text-slate-400" />
+            <ArrowRight className="w-5 h-5 lg:w-6 lg:h-6 text-slate-400 rotate-90 sm:rotate-0" />
           </motion.div>
           
           <motion.div 
             whileHover={{ scale: 1.05 }}
-            className={`flex items-center gap-3 px-4 py-3 ${actionColors.bg} ${actionColors.text} rounded-2xl border ${actionColors.border} shadow-sm`}
+            className={`flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 ${actionColors.bg} ${actionColors.text} rounded-2xl border ${actionColors.border} shadow-sm`}
           >
             {getActionIcon(workflow.actionType)}
-            <span className="text-sm font-semibold">
+            <span className="text-xs lg:text-sm font-semibold">
               {getActionLabel(workflow.actionType)}
             </span>
           </motion.div>
@@ -228,32 +228,32 @@ const WorkflowCard: React.FC<WorkflowCardProps> = ({ workflow, onToggle, onEdit,
       </div>
 
       {/* Stats */}
-      <div className="relative z-10 px-8 py-6 bg-gradient-to-r from-slate-50/80 to-white/80 border-t border-slate-200/50">
-        <div className="grid grid-cols-3 gap-6">
+      <div className="relative z-10 px-6 lg:px-8 py-4 lg:py-6 bg-gradient-to-r from-slate-50/80 to-white/80 border-t border-slate-200/50">
+        <div className="grid grid-cols-3 gap-3 lg:gap-6">
           <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-blue-500" />
+            <div className="flex items-center justify-center gap-1 lg:gap-2 mb-1 lg:mb-2">
+              <TrendingUp className="w-3 h-3 lg:w-4 lg:h-4 text-blue-500" />
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Executions</p>
             </div>
-            <p className="text-lg font-bold text-slate-900">
+            <p className="text-sm lg:text-lg font-bold text-slate-900">
               {(typeof workflow.executionCount === 'number' ? workflow.executionCount : 0).toLocaleString()}
             </p>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
+            <div className="flex items-center justify-center gap-1 lg:gap-2 mb-1 lg:mb-2">
+              <CheckCircle2 className="w-3 h-3 lg:w-4 lg:h-4 text-green-500" />
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Success</p>
             </div>
-            <p className="text-lg font-bold text-slate-900">
+            <p className="text-sm lg:text-lg font-bold text-slate-900">
               {workflow.successRate}%
             </p>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Clock className="w-4 h-4 text-orange-500" />
+            <div className="flex items-center justify-center gap-1 lg:gap-2 mb-1 lg:mb-2">
+              <Clock className="w-3 h-3 lg:w-4 lg:h-4 text-orange-500" />
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Last Run</p>
             </div>
-            <p className="text-sm font-semibold text-slate-900">
+            <p className="text-xs lg:text-sm font-semibold text-slate-900">
               {workflow.lastTriggered ? (
                 <>
                   <span>
